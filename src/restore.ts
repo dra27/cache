@@ -36,7 +36,9 @@ async function run(): Promise<void> {
             const cacheKey = await cache.restoreCache(
                 cachePaths,
                 primaryKey,
-                restoreKeys
+                restoreKeys,
+                undefined,
+                true
             );
             if (!cacheKey) {
                 core.info(
