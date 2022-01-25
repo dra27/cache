@@ -44965,7 +44965,7 @@ function checkKey(key) {
  * @param downloadOptions cache download options
  * @returns string returns the key for the cache hit, otherwise returns undefined
  */
-function restoreCache(paths, primaryKey, restoreKeys, options) {
+function restoreCache(paths, primaryKey, restoreKeys, options, checkOnly) {
     return __awaiter(this, void 0, void 0, function* () {
         checkPaths(paths);
         restoreKeys = restoreKeys || [];
@@ -44987,6 +44987,8 @@ function restoreCache(paths, primaryKey, restoreKeys, options) {
             // Cache not found
             return undefined;
         }
+        if (checkOnly)
+          return cacheEntry.cacheKey;
         const archivePath = path.join(yield utils.createTempDirectory(), utils.getCacheFileName(compressionMethod));
         core.debug(`Archive Path: ${archivePath}`);
         try {
@@ -46732,11 +46734,12 @@ function run() {
             const primaryKey = core.getInput(constants_1.Inputs.Key, { required: true });
             core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
             const restoreKeys = utils.getInputAsArray(constants_1.Inputs.RestoreKeys);
+            const checkOnly = (core.getInput('check-only') || 'false').toUpperCase() === 'TRUE';
             const cachePaths = utils.getInputAsArray(constants_1.Inputs.Path, {
                 required: true
             });
             try {
-                const cacheKey = yield cache.restoreCache(cachePaths, primaryKey, restoreKeys);
+                const cacheKey = yield cache.restoreCache(cachePaths, primaryKey, restoreKeys, undefined, checkOnly);
                 if (!cacheKey) {
                     core.info(`Cache not found for input keys: ${[
                         primaryKey,
