@@ -1156,9 +1156,9 @@ function getVersion(app) {
     });
 }
 // Use zstandard if possible to maximize cache performance
-function getCompressionMethod() {
+function getCompressionMethod(forceGzip) {
     return __awaiter(this, void 0, void 0, function* () {
-        if (process.platform === 'win32' && !(yield isGnuTarInstalled())) {
+        if (forceGzip || process.platform === 'win32' && !(yield isGnuTarInstalled())) {
             // Disable zstd due to bug https://github.com/actions/cache/issues/301
             return constants_1.CompressionMethod.Gzip;
         }
@@ -44965,7 +44965,7 @@ function checkKey(key) {
  * @param downloadOptions cache download options
  * @returns string returns the key for the cache hit, otherwise returns undefined
  */
-function restoreCache(paths, primaryKey, restoreKeys, options, checkOnly) {
+function restoreCache(paths, primaryKey, restoreKeys, options, checkOnly, forceGzip) {
     return __awaiter(this, void 0, void 0, function* () {
         checkPaths(paths);
         restoreKeys = restoreKeys || [];
@@ -44978,7 +44978,7 @@ function restoreCache(paths, primaryKey, restoreKeys, options, checkOnly) {
         for (const key of keys) {
             checkKey(key);
         }
-        const compressionMethod = yield utils.getCompressionMethod();
+        const compressionMethod = yield utils.getCompressionMethod(forceGzip);
         // path are needed to compute version
         const cacheEntry = yield cacheHttpClient.getCacheEntry(keys, paths, {
             compressionMethod
@@ -46735,11 +46735,12 @@ function run() {
             core.saveState(constants_1.State.CachePrimaryKey, primaryKey);
             const restoreKeys = utils.getInputAsArray(constants_1.Inputs.RestoreKeys);
             const checkOnly = (core.getInput('check-only') || 'false').toUpperCase() === 'TRUE';
+            const forceGzip = (core.getInput('force-gzip') || 'false').toUpperCase() === 'TRUE';
             const cachePaths = utils.getInputAsArray(constants_1.Inputs.Path, {
                 required: true
             });
             try {
-                const cacheKey = yield cache.restoreCache(cachePaths, primaryKey, restoreKeys, undefined, checkOnly);
+                const cacheKey = yield cache.restoreCache(cachePaths, primaryKey, restoreKeys, undefined, checkOnly, forceGzip);
                 if (!cacheKey) {
                     core.info(`Cache not found for input keys: ${[
                         primaryKey,
