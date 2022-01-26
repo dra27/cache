@@ -36035,6 +36035,12 @@ function extractTar(archivePath, compressionMethod) {
             '-C',
             workingDirectory.replace(new RegExp(`\\${path.sep}`, 'g'), '/')
         ];
+        const args2 = [
+            ...getCompressionProgram(),
+            '-tf',
+            archivePath.replace(new RegExp(`\\${path.sep}`, 'g'), '/')
+        ];
+        yield execTar(args2, compressionMethod);
         yield execTar(args, compressionMethod);
     });
 }
